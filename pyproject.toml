@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shiplabel"
+version = "0.1.0"
+description = "Normalize messy shipping label input into a consistent shape"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "sarahr694" }]
+dependencies = []
+
+[tool.setuptools.packages.find]
+include = ["shiplabel*"]
