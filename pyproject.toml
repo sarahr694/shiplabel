@@ -12,5 +12,8 @@ license = { text = "MIT" }
 authors = [{ name = "sarahr694" }]
 dependencies = []
 
+[project.scripts]
+shiplabel = "shiplabel.cli:main"
+
 [tool.setuptools.packages.find]
 include = ["shiplabel*"]

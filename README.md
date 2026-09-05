@@ -69,6 +69,29 @@ rather than rejected, since a formatter that throws on the long tail of
 real-world data is more dangerous than one that passes an odd value
 through for a human to look at.
 
+## CLI
+
+`shiplabel` also installs a command that normalizes a whole CSV file of
+records at once:
+
+```
+shiplabel orders.csv normalized.csv
+```
+
+Either argument can be `-` for stdin/stdout, and the output defaults to
+stdout if omitted:
+
+```
+cat orders.csv | shiplabel - > normalized.csv
+```
+
+The CSV columns are `name`, `company`, `city`, `state`, `postal_code`,
+`country`, `phone`, plus any number of `address_line1`, `address_line2`,
+... columns (a flat CSV row has no natural place for a list, so address
+lines are numbered instead). The output uses as many numbered address
+columns as the widest row in the batch needs; shorter rows get blank
+cells in the rest.
+
 ## Running the tests
 
 The test suite uses only `unittest` from the standard library:
@@ -79,5 +102,5 @@ python -m unittest discover tests
 
 ## Status
 
-Early. Covers US and Canadian addresses. No CLI yet, no support for
-international address formats beyond passthrough.
+Early. Covers US and Canadian addresses. No support for international
+address formats beyond passthrough.
