@@ -86,5 +86,45 @@ class FormatLabelTests(unittest.TestCase):
         self.assertEqual(result["country"], "US")
 
 
+class FormatLabelWithWarningsTests(unittest.TestCase):
+    def test_confident_record_has_no_warnings(self):
+        raw = {
+            "name": "jane doe",
+            "state": "california",
+            "postal_code": "941105678",
+            "country": "United States",
+            "phone": "1-555-123-4567",
+        }
+        normalized, warnings = formatter.format_label_with_warnings(raw)
+        self.assertEqual(warnings, ())
+        self.assertEqual(normalized, formatter.format_label(raw))
+
+    def test_flags_unrecognized_state(self):
+        _, warnings = formatter.format_label_with_warnings({"state": "not a state"})
+        self.assertIn("state", warnings)
+
+    def test_flags_short_us_postal_code(self):
+        _, warnings = formatter.format_label_with_warnings({"postal_code": "941"})
+        self.assertIn("postal_code", warnings)
+
+    def test_flags_phone_with_wrong_digit_count(self):
+        _, warnings = formatter.format_label_with_warnings({"phone": "12345"})
+        self.assertIn("phone", warnings)
+
+    def test_flags_unrecognized_country(self):
+        _, warnings = formatter.format_label_with_warnings({"country": "Wakanda"})
+        self.assertIn("country", warnings)
+
+    def test_empty_fields_are_not_flagged(self):
+        _, warnings = formatter.format_label_with_warnings({})
+        self.assertEqual(warnings, ())
+
+    def test_non_us_state_is_not_flagged(self):
+        _, warnings = formatter.format_label_with_warnings(
+            {"state": "on", "country": "CA"}
+        )
+        self.assertNotIn("state", warnings)
+
+
 if __name__ == "__main__":
     unittest.main()

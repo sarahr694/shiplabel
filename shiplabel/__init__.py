@@ -1,5 +1,6 @@
 from .formatter import (
     format_label,
+    format_label_with_warnings,
     normalize_address_lines,
     normalize_country,
     normalize_name,
@@ -11,6 +12,7 @@ from .formatter import (
 
 __all__ = [
     "format_label",
+    "format_label_with_warnings",
     "normalize_address_lines",
     "normalize_country",
     "normalize_name",

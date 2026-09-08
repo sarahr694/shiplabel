@@ -69,6 +69,31 @@ rather than rejected, since a formatter that throws on the long tail of
 real-world data is more dangerous than one that passes an odd value
 through for a human to look at.
 
+## Flagging low-confidence rows
+
+`format_label` never rejects input, so a batch can run clean while
+quietly filling in best-effort values for a handful of rows. Use
+`format_label_with_warnings` when you want to know which of those rows
+to look at:
+
+```python
+from shiplabel import format_label_with_warnings
+
+normalized, warnings = format_label_with_warnings({
+    "state": "not a real state",
+    "postal_code": "123",
+})
+# normalized is the same dict format_label would return
+# warnings == ("state", "postal_code")
+```
+
+`warnings` is a tuple of field names - a subset of `country`, `state`,
+`postal_code`, `phone` - whose raw value didn't match anything the
+formatter recognizes. `name`, `company`, `city`, and `address_lines`
+are never flagged since there's no known shape to check them against.
+An empty field is never flagged either, since there was nothing to
+fail to recognize.
+
 ## CLI
 
 `shiplabel` also installs a command that normalizes a whole CSV file of
