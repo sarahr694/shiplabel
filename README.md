@@ -53,8 +53,11 @@ you only need to clean up one field rather than a whole record.
 - **Name** - collapses whitespace, fixes case, canonicalizes suffixes
   (`JR.` / `jr` / `Jr` all become `Jr`), handles hyphenated and
   apostrophe names like `mary-jane o'brien`.
-- **State** - maps full US state names to their two-letter code;
-  leaves non-US regions upper-cased.
+- **State** - maps full US state names to their two-letter code,
+  Australian state/territory names to their standard abbreviation
+  (`New South Wales` -> `NSW`), and the UK's four constituent countries
+  to their ISO 3166-2:GB region code (`Scotland` -> `SCT`); leaves
+  other regions upper-cased.
 - **Postal code** - reformats US ZIP+4 to `12345-6789` regardless of
   whether the dash was present, and Canadian codes to `A1A 1A1`.
 - **Phone** - strips a leading `+1` / `1` country code and formats US

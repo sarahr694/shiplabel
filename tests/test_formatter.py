@@ -50,6 +50,18 @@ class NormalizeStateTests(unittest.TestCase):
     def test_non_us_country_is_upper_cased_only(self):
         self.assertEqual(formatter.normalize_state("on", "CA"), "ON")
 
+    def test_au_full_name_to_code(self):
+        self.assertEqual(formatter.normalize_state("new south wales", "AU"), "NSW")
+
+    def test_au_already_a_code(self):
+        self.assertEqual(formatter.normalize_state("qld", "australia"), "QLD")
+
+    def test_gb_constituent_country_to_region_code(self):
+        self.assertEqual(formatter.normalize_state("scotland", "GB"), "SCT")
+
+    def test_gb_already_a_code(self):
+        self.assertEqual(formatter.normalize_state("wls", "uk"), "WLS")
+
 
 class FormatLabelTests(unittest.TestCase):
     def test_full_record(self):
@@ -122,6 +134,24 @@ class FormatLabelWithWarningsTests(unittest.TestCase):
     def test_non_us_state_is_not_flagged(self):
         _, warnings = formatter.format_label_with_warnings(
             {"state": "on", "country": "CA"}
+        )
+        self.assertNotIn("state", warnings)
+
+    def test_au_recognized_state_is_not_flagged(self):
+        _, warnings = formatter.format_label_with_warnings(
+            {"state": "victoria", "country": "AU"}
+        )
+        self.assertNotIn("state", warnings)
+
+    def test_au_unrecognized_state_is_flagged(self):
+        _, warnings = formatter.format_label_with_warnings(
+            {"state": "not a state", "country": "AU"}
+        )
+        self.assertIn("state", warnings)
+
+    def test_gb_recognized_region_is_not_flagged(self):
+        _, warnings = formatter.format_label_with_warnings(
+            {"state": "wales", "country": "GB"}
         )
         self.assertNotIn("state", warnings)
 

@@ -33,6 +33,9 @@ _COUNTRY_ALIASES = {
     "gb": "GB",
     "great britain": "GB",
     "united kingdom": "GB",
+    "au": "AU",
+    "aus": "AU",
+    "australia": "AU",
 }
 
 _US_STATE_ALIASES = {
@@ -54,6 +57,33 @@ _US_STATE_ALIASES = {
     "district of columbia": "DC",
 }
 _US_STATE_CODES = set(_US_STATE_ALIASES.values())
+
+# Australian states and territories, as printed on the addressee line
+# of an Australia Post label.
+_AU_STATE_ALIASES = {
+    "new south wales": "NSW",
+    "victoria": "VIC",
+    "queensland": "QLD",
+    "south australia": "SA",
+    "western australia": "WA",
+    "tasmania": "TAS",
+    "northern territory": "NT",
+    "australian capital territory": "ACT",
+}
+_AU_STATE_CODES = set(_AU_STATE_ALIASES.values())
+
+# The UK doesn't use a state/province on addresses - the postcode
+# carries that information - but a "state" field importing from a
+# checkout cart sometimes holds one of the four constituent countries.
+# These map to the ISO 3166-2:GB region codes rather than to a county,
+# since county names aren't a closed set.
+_GB_REGION_ALIASES = {
+    "england": "ENG",
+    "scotland": "SCT",
+    "wales": "WLS",
+    "northern ireland": "NIR",
+}
+_GB_REGION_CODES = set(_GB_REGION_ALIASES.values())
 
 
 def normalize_whitespace(text):
@@ -131,27 +161,40 @@ def normalize_country(country):
     return _normalize_country_with_confidence(country)[0]
 
 
+_STATE_TABLES = {
+    "US": (_US_STATE_ALIASES, _US_STATE_CODES),
+    "AU": (_AU_STATE_ALIASES, _AU_STATE_CODES),
+    "GB": (_GB_REGION_ALIASES, _GB_REGION_CODES),
+}
+
+
 def _normalize_state_with_confidence(state, country="US"):
     cleaned = normalize_whitespace(state)
     if not cleaned:
         return "", True
-    if normalize_country(country) != "US":
+    table = _STATE_TABLES.get(normalize_country(country))
+    if table is None:
         return cleaned.upper(), True
+    aliases, codes = table
     upper = cleaned.upper()
-    if upper in _US_STATE_CODES:
+    if upper in codes:
         return upper, True
     key = cleaned.lower()
-    if key in _US_STATE_ALIASES:
-        return _US_STATE_ALIASES[key], True
+    if key in aliases:
+        return aliases[key], True
     return cleaned.title(), False
 
 
 def normalize_state(state, country="US"):
-    """Map a US state name or abbreviation to its two-letter code.
+    """Map a state/province/region name or abbreviation to its code.
 
-    For non-US countries there is no shared abbreviation scheme, so the
-    value is just whitespace-normalized and upper-cased, which matches
-    how Canadian provinces are printed on labels (ON, BC, QC, ...).
+    Covers US states, Australian states and territories, and the UK's
+    four constituent countries (mapped to ISO 3166-2:GB region codes,
+    since a UK "state" field usually holds one of those rather than a
+    county). For any other country there is no shared abbreviation
+    scheme, so the value is just whitespace-normalized and upper-cased,
+    which matches how Canadian provinces are printed on labels
+    (ON, BC, QC, ...).
     """
     return _normalize_state_with_confidence(state, country)[0]
 
@@ -232,8 +275,8 @@ def format_label_with_warnings(record):
 
     Returns `(normalized, warnings)`, where `warnings` is a tuple of
     field names whose raw value didn't match a known shape: a country
-    that isn't a recognized alias or two-letter code, a US state that
-    isn't a recognized name or code, a postal code that isn't 5 or 9
+    that isn't a recognized alias or two-letter code, a US/AU/GB state
+    or region that isn't a recognized name or code, a postal code that isn't 5 or 9
     digits (US) or 6 characters (CA), or a phone number that isn't 10
     digits after country-code stripping (US/CA). Those fields are
     still filled in with a best-effort value, the same one `format_label`
