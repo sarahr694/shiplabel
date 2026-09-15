@@ -59,7 +59,9 @@ you only need to clean up one field rather than a whole record.
   to their ISO 3166-2:GB region code (`Scotland` -> `SCT`); leaves
   other regions upper-cased.
 - **Postal code** - reformats US ZIP+4 to `12345-6789` regardless of
-  whether the dash was present, and Canadian codes to `A1A 1A1`.
+  whether the dash was present, Canadian codes to `A1A 1A1`, UK
+  postcodes to `SW1A 1AA`, and reduces Australian postcodes to their
+  4 digits.
 - **Phone** - strips a leading `+1` / `1` country code and formats US
   and Canadian numbers as `(555) 123-4567`.
 - **Country** - maps common aliases (`USA`, `U.S.`, `United States`,
@@ -130,5 +132,6 @@ python -m unittest discover tests
 
 ## Status
 
-Early. Covers US and Canadian addresses. No support for international
-address formats beyond passthrough.
+Early. State and postal code normalization cover US, Canada, the UK,
+and Australia. Phone number formatting is still US/Canada only -
+other countries get digits with separators stripped and nothing else.

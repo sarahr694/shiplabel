@@ -28,6 +28,24 @@ class NormalizePostalCodeTests(unittest.TestCase):
     def test_canadian_postal_code(self):
         self.assertEqual(formatter.normalize_postal_code("k1a0b1", "CA"), "K1A 0B1")
 
+    def test_gb_postcode_no_space(self):
+        self.assertEqual(formatter.normalize_postal_code("sw1a1aa", "GB"), "SW1A 1AA")
+
+    def test_gb_postcode_with_space(self):
+        self.assertEqual(formatter.normalize_postal_code("EC1A 1BB", "uk"), "EC1A 1BB")
+
+    def test_gb_postcode_short_outward_code(self):
+        self.assertEqual(formatter.normalize_postal_code("m11aa", "GB"), "M1 1AA")
+
+    def test_gb_postcode_unrecognized_shape_passes_through(self):
+        self.assertEqual(formatter.normalize_postal_code("not a postcode", "GB"), "NOT A POSTCODE")
+
+    def test_au_postcode(self):
+        self.assertEqual(formatter.normalize_postal_code("3000", "australia"), "3000")
+
+    def test_au_postcode_wrong_digit_count_passes_through(self):
+        self.assertEqual(formatter.normalize_postal_code("300", "AU"), "300")
+
 
 class NormalizePhoneTests(unittest.TestCase):
     def test_strips_formatting_and_country_code(self):
@@ -154,6 +172,30 @@ class FormatLabelWithWarningsTests(unittest.TestCase):
             {"state": "wales", "country": "GB"}
         )
         self.assertNotIn("state", warnings)
+
+    def test_gb_recognized_postcode_is_not_flagged(self):
+        _, warnings = formatter.format_label_with_warnings(
+            {"postal_code": "sw1a 1aa", "country": "GB"}
+        )
+        self.assertNotIn("postal_code", warnings)
+
+    def test_gb_unrecognized_postcode_is_flagged(self):
+        _, warnings = formatter.format_label_with_warnings(
+            {"postal_code": "not a postcode", "country": "GB"}
+        )
+        self.assertIn("postal_code", warnings)
+
+    def test_au_recognized_postcode_is_not_flagged(self):
+        _, warnings = formatter.format_label_with_warnings(
+            {"postal_code": "3000", "country": "AU"}
+        )
+        self.assertNotIn("postal_code", warnings)
+
+    def test_au_unrecognized_postcode_is_flagged(self):
+        _, warnings = formatter.format_label_with_warnings(
+            {"postal_code": "300", "country": "AU"}
+        )
+        self.assertIn("postal_code", warnings)
 
 
 if __name__ == "__main__":

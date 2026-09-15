@@ -85,6 +85,13 @@ _GB_REGION_ALIASES = {
 }
 _GB_REGION_CODES = set(_GB_REGION_ALIASES.values())
 
+# UK postcode outward code (area + district, e.g. "SW1A", "M1", "EC1A")
+# followed directly by the inward code (a digit and two letters, e.g.
+# "1AA"), with no space - the space is re-inserted on output. This
+# matches the shape of every postcode in current use without trying to
+# validate against the actual list of assigned areas.
+_GB_POSTCODE_RE = re.compile(r"^([A-Z]{1,2}[0-9][A-Z0-9]?)([0-9][A-Z]{2})$")
+
 
 def normalize_whitespace(text):
     """Collapse any run of whitespace to a single space and trim the ends."""
@@ -220,6 +227,19 @@ def _normalize_postal_code_with_confidence(postal_code, country="US"):
             return f"{compact[:3]} {compact[3:]}", True
         return code, False
 
+    if country_code == "GB":
+        compact = re.sub(r"[^A-Z0-9]", "", code)
+        match = _GB_POSTCODE_RE.match(compact)
+        if match:
+            return f"{match.group(1)} {match.group(2)}", True
+        return code, False
+
+    if country_code == "AU":
+        digits = re.sub(r"[^0-9]", "", code)
+        if len(digits) == 4:
+            return digits, True
+        return code, False
+
     return code, True
 
 
@@ -228,9 +248,11 @@ def normalize_postal_code(postal_code, country="US"):
 
     US ZIP+4 codes are reformatted to the standard 12345-6789 shape
     even if the dash was dropped or replaced with a space. Canadian
-    postal codes are upper-cased and spaced as A1A 1A1. Anything else
-    is just trimmed and upper-cased, since ZIP-style validation
-    doesn't apply.
+    postal codes are upper-cased and spaced as A1A 1A1. UK postcodes
+    are upper-cased and spaced as SW1A 1AA regardless of the spacing
+    they arrived with. Australian postcodes are reduced to their 4
+    digits. Anything else is just trimmed and upper-cased, since
+    ZIP-style validation doesn't apply.
     """
     return _normalize_postal_code_with_confidence(postal_code, country)[0]
 
@@ -276,9 +298,11 @@ def format_label_with_warnings(record):
     Returns `(normalized, warnings)`, where `warnings` is a tuple of
     field names whose raw value didn't match a known shape: a country
     that isn't a recognized alias or two-letter code, a US/AU/GB state
-    or region that isn't a recognized name or code, a postal code that isn't 5 or 9
-    digits (US) or 6 characters (CA), or a phone number that isn't 10
-    digits after country-code stripping (US/CA). Those fields are
+    or region that isn't a recognized name or code, a postal code that
+    doesn't match the expected shape for its country (5 or 9 digits for
+    US, 6 characters for CA, an outward/inward code pair for GB, 4
+    digits for AU), or a phone number that isn't 10 digits after
+    country-code stripping (US/CA). Those fields are
     still filled in with a best-effort value, the same one `format_label`
     would return - this is meant for a batch run where a human should
     look at the flagged rows rather than trust them as-is.
